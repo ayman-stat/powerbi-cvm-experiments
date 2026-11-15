@@ -1,0 +1,61 @@
+/// Online Retail II customers (UK online gift retailer).
+table Customer
+
+	column CustomerKey
+		dataType: int64
+		isKey
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: CustomerKey
+
+	column CohortMonth
+		dataType: dateTime
+		isHidden
+		formatString: mmm yyyy
+		summarizeBy: none
+		sourceColumn: CohortMonth
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Country
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Country
+
+	/// United Kingdom, rest of Europe, rest of world
+	column Market
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Market
+
+	column CohortYear
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: CohortYear
+
+	/// Month of first purchase
+	column CohortLabel
+		dataType: string
+		summarizeBy: none
+		sourceColumn: CohortLabel
+		sortByColumn: CohortSort
+
+	column CohortSort
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: CohortSort
+
+	partition Customer = m
+		mode: import
+		source =
+				let
+				    Source = fnLoadCsv("dim_retail_customer.csv"),
+				    Typed = Table.TransformColumnTypes(Source, {{"CustomerKey", Int64.Type}, {"CohortMonth", type date}, {"Country", type text}, {"Market", type text}, {"CohortYear", type text}, {"CohortLabel", type text}, {"CohortSort", Int64.Type}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table

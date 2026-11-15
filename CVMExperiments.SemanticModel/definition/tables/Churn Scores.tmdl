@@ -1,0 +1,95 @@
+/// Out-of-time churn scores at 1 Sep 2011 (model trained on Mar and Jun 2011 snapshots); actual churn observed by 30 Nov 2011.
+table 'Churn Scores'
+
+	column CustomerKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: CustomerKey
+
+	column ChurnScore
+		dataType: double
+		isHidden
+		formatString: 0.0%
+		summarizeBy: none
+		sourceColumn: ChurnScore
+
+	/// 1 = highest predicted churn risk
+	column RiskDecile
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: RiskDecile
+
+	column RiskBand
+		dataType: string
+		summarizeBy: none
+		sourceColumn: RiskBand
+		sortByColumn: RiskBandOrder
+
+	column RiskBandOrder
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: RiskBandOrder
+
+	column ActualChurn
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: ActualChurn
+
+	column Value365
+		dataType: double
+		isHidden
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: Value365
+
+	column RecencyDays
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: RecencyDays
+
+	column Orders365
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: Orders365
+
+	column ValueTier
+		dataType: string
+		summarizeBy: none
+		sourceColumn: ValueTier
+		sortByColumn: ValueTierOrder
+
+	column ValueTierOrder
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: ValueTierOrder
+
+	column RFMSegment
+		dataType: string
+		summarizeBy: none
+		sourceColumn: RFMSegment
+
+	partition 'Churn Scores' = m
+		mode: import
+		source =
+				let
+				    Source = fnLoadCsv("fact_churn_scores.csv"),
+				    Typed = Table.TransformColumnTypes(Source, {{"CustomerKey", Int64.Type}, {"ChurnScore", type number}, {"RiskDecile", Int64.Type}, {"RiskBand", type text}, {"ActualChurn", Int64.Type}, {"Value365", type number}, {"RecencyDays", Int64.Type}, {"Orders365", Int64.Type}, {"ValueTier", type text}, {"RFMSegment", type text}}, "en-US"),
+				    Result = Table.AddColumn(Table.AddColumn(Typed, "RiskBandOrder", each if [RiskBand] = "High" then 1 else if [RiskBand] = "Medium" then 2 else 3, Int64.Type),
+				        "ValueTierOrder", each if [ValueTier] = "Top 20%" then 1 else if [ValueTier] = "Middle 30%" then 2 else 3, Int64.Type)
+				in
+				    Result
+
+	annotation PBI_ResultType = Table

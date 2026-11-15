@@ -1,0 +1,14 @@
+Feature,AUCDrop
+"Orders, last 12 months",0.0238
+Average days between orders,0.0167
+"Spend, last 12 months",0.012
+Days since last order,0.0096
+"Spend, last 90 days",0.007
+"Orders, all time",0.005
+"Spend, prior 90 days",0.0047
+Average basket,0.0033
+Customer tenure,0.0027
+Cancelled lines,0.0002
+"Orders, last 90 days",-0.0001
+UK customer,-0.0004
+Distinct products,-0.0013

@@ -1,0 +1,70 @@
+/// Fact: one row per customer per month while in the base (active = bought in the last 3 months) or in the month they churn.
+table 'Customer Month'
+
+	column CustomerKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: CustomerKey
+
+	column MonthStart
+		dataType: dateTime
+		isHidden
+		formatString: mmm yyyy
+		summarizeBy: none
+		sourceColumn: MonthStart
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Flow
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: Flow
+
+	column IsActive
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: IsActive
+
+	column Purchased
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: Purchased
+
+	column Revenue
+		dataType: double
+		isHidden
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: Revenue
+
+	column Orders
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: Orders
+
+	column MonthsSinceFirst
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: MonthsSinceFirst
+
+	partition 'Customer Month' = m
+		mode: import
+		source =
+				let
+				    Source = fnLoadCsv("fact_customer_month.csv"),
+				    Typed = Table.TransformColumnTypes(Source, {{"CustomerKey", Int64.Type}, {"MonthStart", type date}, {"Flow", type text}, {"IsActive", Int64.Type}, {"Purchased", Int64.Type}, {"Revenue", type number}, {"Orders", Int64.Type}, {"MonthsSinceFirst", Int64.Type}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table

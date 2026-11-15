@@ -1,0 +1,6 @@
+Flow,FlowOrder,Direction
+Opening base,0,Base
+New,1,Gain
+Reactivated,2,Gain
+Churned,3,Loss
+Retained,4,Base

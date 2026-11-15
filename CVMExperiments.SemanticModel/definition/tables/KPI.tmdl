@@ -1,0 +1,379 @@
+/// All report measures, organised in display folders.
+table KPI
+
+	/// Customers who bought in the last 3 months, at the end of the selected period.
+	measure 'Active Base' =
+			VAR _m = MAX('Month'[Date])
+			RETURN CALCULATE(COUNTROWS('Customer Month'), 'Customer Month'[IsActive] = 1, 'Month'[Date] = _m)
+		formatString: #,0
+		displayFolder: 1 Base
+
+	/// Active base at the end of the month before the selected period.
+	measure 'Opening Base' =
+			VAR _m = EDATE(MIN('Month'[Date]), -1)
+			RETURN CALCULATE(COUNTROWS('Customer Month'), 'Customer Month'[IsActive] = 1, REMOVEFILTERS('Month'), 'Month'[Date] = _m)
+		formatString: #,0
+		displayFolder: 1 Base
+
+	/// First purchase in the month.
+	measure 'New Customers' = CALCULATE(COUNTROWS('Customer Month'), 'Customer Month'[Flow] = "New")
+		formatString: #,0
+		displayFolder: 1 Base
+
+	/// Returned after 3+ months without a purchase.
+	measure Reactivated = CALCULATE(COUNTROWS('Customer Month'), 'Customer Month'[Flow] = "Reactivated")
+		formatString: #,0
+		displayFolder: 1 Base
+
+	/// Left the active base: 3 months without a purchase.
+	measure Churned = CALCULATE(COUNTROWS('Customer Month'), 'Customer Month'[Flow] = "Churned")
+		formatString: #,0
+		displayFolder: 1 Base
+
+	measure 'Churned (negative)' = -[Churned]
+		formatString: #,0
+		displayFolder: 1 Base
+
+	measure 'Net Change' = [New Customers] + [Reactivated] - [Churned]
+		formatString: +#,0;-#,0;0
+		displayFolder: 1 Base
+
+	/// Average over months of churned / opening active base.
+	measure 'Monthly Churn Rate' =
+			AVERAGEX(VALUES('Month'[Date]),
+			    VAR _d = 'Month'[Date]
+			    VAR _open = CALCULATE(COUNTROWS('Customer Month'), 'Customer Month'[IsActive] = 1, REMOVEFILTERS('Month'), 'Month'[Date] = EDATE(_d, -1))
+			    RETURN DIVIDE(CALCULATE(COUNTROWS('Customer Month'), 'Customer Month'[Flow] = "Churned"), _open))
+		formatString: 0.0%
+		displayFolder: 1 Base
+
+	measure 'Reactivation Share of Gains' = DIVIDE([Reactivated], [New Customers] + [Reactivated])
+		formatString: 0%
+		displayFolder: 1 Base
+
+	/// Net revenue (cancellations deducted), GBP.
+	measure Revenue = SUM('Customer Month'[Revenue])
+		formatString: £#,0
+		displayFolder: 1 Base
+
+	measure 'Avg Active Base' = AVERAGEX(VALUES('Month'[Date]), CALCULATE([Active Base]))
+		formatString: #,0
+		displayFolder: 1 Base
+
+	/// Monthly revenue per customer in the active base.
+	measure 'Revenue per Active Customer' = DIVIDE([Revenue], [Avg Active Base] * DISTINCTCOUNT('Month'[Date]))
+		formatString: £#,0
+		displayFolder: 1 Base
+
+	/// Signed values for the customer bridge.
+	measure 'Bridge Value' =
+			SWITCH(SELECTEDVALUE('Flow'[Flow]),
+			    "Opening base", CALCULATE([Opening Base], REMOVEFILTERS('Flow')),
+			    "New", [New Customers], "Reactivated", [Reactivated], "Churned", -[Churned])
+		formatString: #,0
+		displayFolder: 1 Base
+
+	measure 'Cohort Customers' = DISTINCTCOUNT('Cohort Activity'[CustomerKey])
+		formatString: #,0
+		displayFolder: 2 Retention
+
+	measure 'Cohort Size' = CALCULATE(DISTINCTCOUNT('Cohort Activity'[CustomerKey]), REMOVEFILTERS('Cohort Activity'[MonthIndex]), 'Cohort Activity'[MonthIndex] = 0)
+		formatString: #,0
+		displayFolder: 2 Retention
+
+	/// Share of a cohort buying again N months after the first purchase.
+	measure Retention = DIVIDE([Cohort Customers], [Cohort Size])
+		formatString: 0%
+		displayFolder: 2 Retention
+
+	measure 'Month 1 Retention' = CALCULATE([Retention], 'Cohort Activity'[MonthIndex] = 1)
+		formatString: 0.0%
+		displayFolder: 2 Retention
+
+	measure 'Month 3 Retention' = CALCULATE([Retention], 'Cohort Activity'[MonthIndex] = 3)
+		formatString: 0.0%
+		displayFolder: 2 Retention
+
+	measure 'Month 6 Retention' = CALCULATE([Retention], 'Cohort Activity'[MonthIndex] = 6)
+		formatString: 0.0%
+		displayFolder: 2 Retention
+
+	measure 'Month 12 Retention' = CALCULATE([Retention], 'Cohort Activity'[MonthIndex] = 12)
+		formatString: 0.0%
+		displayFolder: 2 Retention
+
+	/// Net revenue in the first 12 months per new customer.
+	measure '12-Month Value per Customer' = DIVIDE(CALCULATE(SUM('Cohort Activity'[Revenue]), 'Cohort Activity'[MonthIndex] <= 11), [Cohort Size])
+		formatString: £#,0
+		displayFolder: 2 Retention
+
+	measure 'Customers Scored' = COUNTROWS('Churn Scores')
+		formatString: #,0
+		displayFolder: 3 Churn model
+
+	/// Share with no purchase in the 90 days after scoring.
+	measure 'Actual Churn Rate' = AVERAGE('Churn Scores'[ActualChurn])
+		formatString: 0.0%
+		displayFolder: 3 Churn model
+
+	/// Mean predicted probability.
+	measure 'Predicted Churn' = AVERAGE('Churn Scores'[ChurnScore])
+		formatString: 0.0%
+		displayFolder: 3 Churn model
+
+	/// Sum of churn probability x last-12-month spend: the revenue a retention team is trying to save.
+	measure 'Value at Risk' = SUMX('Churn Scores', 'Churn Scores'[ChurnScore] * 'Churn Scores'[Value365])
+		formatString: £#,0
+		displayFolder: 3 Churn model
+
+	measure 'Customer Value' = SUM('Churn Scores'[Value365])
+		formatString: £#,0
+		displayFolder: 3 Churn model
+
+	/// Share of all churners found in the top 30% of scores.
+	measure 'Churn Capture' = DIVIDE(CALCULATE(SUM('Churn Scores'[ActualChurn]), 'Churn Scores'[RiskDecile] <= 3), CALCULATE(SUM('Churn Scores'[ActualChurn]), ALL('Churn Scores')))
+		formatString: 0%
+		displayFolder: 3 Churn model
+
+	measure 'Driver Importance' = SUM('Churn Drivers'[AUCDrop])
+		formatString: 0.000
+		displayFolder: 3 Churn model
+
+	/// Out-of-time AUC (scored 1 Sep 2011).
+	measure 'Test AUC' = LOOKUPVALUE('Model Metrics'[Value], 'Model Metrics'[Metric], "churn_auc_test")
+		formatString: 0.00
+		displayFolder: 9 Model metrics
+
+	measure 'Recency-only AUC' = LOOKUPVALUE('Model Metrics'[Value], 'Model Metrics'[Metric], "churn_auc_recency_only_test")
+		formatString: 0.00
+		displayFolder: 9 Model metrics
+
+	measure 'Top Decile Churn' = LOOKUPVALUE('Model Metrics'[Value], 'Model Metrics'[Metric], "churn_top_decile_rate")
+		formatString: 0%
+		displayFolder: 9 Model metrics
+
+	measure 'T Customers' = CALCULATE(COUNTROWS('Email Test'), TREATAS(VALUES('Test Arm'[Arm]), 'Email Test'[Arm]))
+		formatString: #,0
+		displayFolder: 4 A-B test
+
+	measure 'C Customers' = CALCULATE(COUNTROWS('Email Test'), 'Email Test'[Arm] = "Control")
+		formatString: #,0
+		displayFolder: 4 A-B test
+
+	/// Visit Rate in the selected treatment arm.
+	measure 'T Visit Rate' = CALCULATE(AVERAGE('Email Test'[Visited]), TREATAS(VALUES('Test Arm'[Arm]), 'Email Test'[Arm]))
+		formatString: 0.0%
+		displayFolder: 4 A-B test
+
+	/// Visit Rate in the control group.
+	measure 'C Visit Rate' = CALCULATE(AVERAGE('Email Test'[Visited]), 'Email Test'[Arm] = "Control")
+		formatString: 0.0%
+		displayFolder: 4 A-B test
+
+	/// Treatment minus control: the causal effect of the e-mail on visit rate.
+	measure 'Visit Rate Uplift' = [T Visit Rate] - [C Visit Rate]
+		formatString: 0.0%
+		displayFolder: 4 A-B test
+
+	/// Conversion Rate in the selected treatment arm.
+	measure 'T Conversion Rate' = CALCULATE(AVERAGE('Email Test'[Converted]), TREATAS(VALUES('Test Arm'[Arm]), 'Email Test'[Arm]))
+		formatString: 0.00%
+		displayFolder: 4 A-B test
+
+	/// Conversion Rate in the control group.
+	measure 'C Conversion Rate' = CALCULATE(AVERAGE('Email Test'[Converted]), 'Email Test'[Arm] = "Control")
+		formatString: 0.00%
+		displayFolder: 4 A-B test
+
+	/// Treatment minus control: the causal effect of the e-mail on conversion rate.
+	measure 'Conversion Rate Uplift' = [T Conversion Rate] - [C Conversion Rate]
+		formatString: 0.00%
+		displayFolder: 4 A-B test
+
+	/// Spend per Customer in the selected treatment arm.
+	measure 'T Spend per Customer' = CALCULATE(AVERAGE('Email Test'[Spend]), TREATAS(VALUES('Test Arm'[Arm]), 'Email Test'[Arm]))
+		formatString: $0.00
+		displayFolder: 4 A-B test
+
+	/// Spend per Customer in the control group.
+	measure 'C Spend per Customer' = CALCULATE(AVERAGE('Email Test'[Spend]), 'Email Test'[Arm] = "Control")
+		formatString: $0.00
+		displayFolder: 4 A-B test
+
+	/// Treatment minus control: the causal effect of the e-mail on spend per customer.
+	measure 'Spend per Customer Uplift' = [T Spend per Customer] - [C Spend per Customer]
+		formatString: $0.00
+		displayFolder: 4 A-B test
+
+	measure 'Incremental Conversions' = [Conversion Rate Uplift] * [T Customers]
+		formatString: #,0
+		displayFolder: 4 A-B test
+
+	/// Extra two-week spend caused by the e-mail in the treated group.
+	measure 'Incremental Revenue' = [Spend per Customer Uplift] * [T Customers]
+		formatString: $#,0
+		displayFolder: 4 A-B test
+
+	measure 'Relative Conversion Lift' = DIVIDE([Conversion Rate Uplift], [C Conversion Rate])
+		formatString: +0%;-0%
+		displayFolder: 4 A-B test
+
+	/// Two-sided two-proportion z-test.
+	measure 'Visit p-value' = TwoProportionP([T Visit Rate], [T Customers], [C Visit Rate], [C Customers])
+		formatString: 0.0000
+		displayFolder: 4 A-B test
+
+	measure 'Conversion p-value' = TwoProportionP([T Conversion Rate], [T Customers], [C Conversion Rate], [C Customers])
+		formatString: 0.0000
+		displayFolder: 4 A-B test
+
+	/// Welch test on mean spend (normal approximation).
+	measure 'Spend p-value' =
+			MeanDifferenceP([T Spend per Customer], CALCULATE(VAR.S('Email Test'[Spend]), TREATAS(VALUES('Test Arm'[Arm]), 'Email Test'[Arm])), [T Customers],
+			    [C Spend per Customer], CALCULATE(VAR.S('Email Test'[Spend]), 'Email Test'[Arm] = "Control"), [C Customers])
+		formatString: 0.0000
+		displayFolder: 4 A-B test
+
+	/// Readable p-value for cards.
+	measure 'Spend p-value Label' = IF([Spend p-value] < 0.001, "< 0.001", FORMAT([Spend p-value], "0.000"))
+		displayFolder: 4 A-B test
+
+	measure 'Conversion Uplift CI' =
+			VAR _se = SQRT([T Conversion Rate] * (1 - [T Conversion Rate]) / [T Customers] + [C Conversion Rate] * (1 - [C Conversion Rate]) / [C Customers])
+			RETURN FORMAT([Conversion Rate Uplift] - 1.96 * _se, "+0.00%;-0.00%") & " to " & FORMAT([Conversion Rate Uplift] + 1.96 * _se, "+0.00%;-0.00%")
+		displayFolder: 4 A-B test
+
+	measure 'Spend Uplift CI' =
+			VAR _se = SQRT(CALCULATE(VAR.S('Email Test'[Spend]), TREATAS(VALUES('Test Arm'[Arm]), 'Email Test'[Arm])) / [T Customers] + CALCULATE(VAR.S('Email Test'[Spend]), 'Email Test'[Arm] = "Control") / [C Customers])
+			RETURN FORMAT([Spend per Customer Uplift] - 1.96 * _se, "+$0.00;-$0.00") & " to " & FORMAT([Spend per Customer Uplift] + 1.96 * _se, "+$0.00;-$0.00")
+		displayFolder: 4 A-B test
+
+	measure 'Readout Verdict' =
+			IF([Spend p-value] < 0.05 && [Spend per Customer Uplift] > 0, "Ship: significant revenue uplift",
+			    IF([Visit p-value] < 0.05 && [Visit Rate Uplift] > 0, "Engagement up, revenue not yet significant", "No significant effect"))
+		displayFolder: 4 A-B test
+
+	measure 'Arm Caption' = "Treatment: " & SELECTEDVALUE('Test Arm'[Arm], "both offers") & " vs control (no e-mail)"
+		displayFolder: 4 A-B test
+
+	/// Visit Uplift of the Mens offer vs control within the current segment.
+	measure 'Visit Uplift Mens' =
+			CALCULATE(AVERAGE('Email Test'[Visited]), 'Email Test'[Arm] = "Mens offer")
+			    - CALCULATE(AVERAGE('Email Test'[Visited]), 'Email Test'[Arm] = "Control")
+		formatString: +0.0%;-0.0%
+		displayFolder: 5 Offers
+
+	/// Visit Uplift of the Womens offer vs control within the current segment.
+	measure 'Visit Uplift Womens' =
+			CALCULATE(AVERAGE('Email Test'[Visited]), 'Email Test'[Arm] = "Womens offer")
+			    - CALCULATE(AVERAGE('Email Test'[Visited]), 'Email Test'[Arm] = "Control")
+		formatString: +0.0%;-0.0%
+		displayFolder: 5 Offers
+
+	/// Spend Uplift of the Mens offer vs control within the current segment.
+	measure 'Spend Uplift Mens' =
+			CALCULATE(AVERAGE('Email Test'[Spend]), 'Email Test'[Arm] = "Mens offer")
+			    - CALCULATE(AVERAGE('Email Test'[Spend]), 'Email Test'[Arm] = "Control")
+		formatString: +$0.00;-$0.00
+		displayFolder: 5 Offers
+
+	/// Spend Uplift of the Womens offer vs control within the current segment.
+	measure 'Spend Uplift Womens' =
+			CALCULATE(AVERAGE('Email Test'[Spend]), 'Email Test'[Arm] = "Womens offer")
+			    - CALCULATE(AVERAGE('Email Test'[Spend]), 'Email Test'[Arm] = "Control")
+		formatString: +$0.00;-$0.00
+		displayFolder: 5 Offers
+
+	measure 'Segment Customers' = COUNTROWS('Email Test')
+		formatString: #,0
+		displayFolder: 5 Offers
+
+	/// Revenue-maximising offer for the segment.
+	measure 'Best Offer' =
+			VAR _m = [Spend Uplift Mens]
+			VAR _w = [Spend Uplift Womens]
+			RETURN IF(MAX(_m, _w) <= 0, "No e-mail", IF(_m >= _w, "Mens offer", "Womens offer"))
+		displayFolder: 5 Offers
+
+	measure 'Best Offer Uplift' = MAX([Spend Uplift Mens], [Spend Uplift Womens])
+		formatString: +$0.00;-$0.00
+		displayFolder: 5 Offers
+
+	/// Incremental two-week revenue per 1,000 customers (IPW estimate).
+	measure 'Policy Incremental per 1000' = SUM('Policies'[IncPer1000])
+		formatString: $#,0
+		displayFolder: 5 Offers
+
+	measure 'Policy CI' = FORMAT(SUM('Policies'[CILowPer1000]), "$#,0") & " to " & FORMAT(SUM('Policies'[CIHighPer1000]), "$#,0")
+		displayFolder: 5 Offers
+
+	measure 'Target Share Value' = SELECTEDVALUE('Target Share'[Target Share], 10)
+		formatString: 0"%"
+		displayFolder: 6 Targeting
+
+	measure 'Contact Cost Value' = SELECTEDVALUE('Contact Cost'[Contact Cost], 0.75)
+		formatString: $0.00
+		displayFolder: 6 Targeting
+
+	measure 'Sim Contacts' = LOOKUPVALUE('Targeting Curve'[Contacts], 'Targeting Curve'[TargetPct], [Target Share Value])
+		formatString: #,0
+		displayFolder: 6 Targeting
+
+	measure 'Sim Incremental Revenue' = LOOKUPVALUE('Targeting Curve'[ModelIncRevenue], 'Targeting Curve'[TargetPct], [Target Share Value])
+		formatString: $#,0
+		displayFolder: 6 Targeting
+
+	measure 'Sim Incremental Visits' = LOOKUPVALUE('Targeting Curve'[ModelIncVisits], 'Targeting Curve'[TargetPct], [Target Share Value])
+		formatString: #,0
+		displayFolder: 6 Targeting
+
+	measure 'Sim Contact Cost' = [Sim Contacts] * [Contact Cost Value]
+		formatString: $#,0
+		displayFolder: 6 Targeting
+
+	measure 'Sim Net Revenue' = [Sim Incremental Revenue] - [Sim Contact Cost]
+		formatString: $#,0;-$#,0
+		displayFolder: 6 Targeting
+
+	measure 'Sim ROI' = DIVIDE([Sim Net Revenue], [Sim Contact Cost])
+		formatString: 0%
+		displayFolder: 6 Targeting
+
+	/// Target share that maximises net incremental revenue at the chosen cost.
+	measure 'Best Target Share' =
+			VAR _c = [Contact Cost Value]
+			VAR _t = TOPN(1, FILTER(ALL('Targeting Curve'), 'Targeting Curve'[TargetPct] > 0), 'Targeting Curve'[ModelIncRevenue] - 'Targeting Curve'[Contacts] * _c, DESC)
+			RETURN MAXX(_t, 'Targeting Curve'[TargetPct])
+		formatString: 0"%"
+		displayFolder: 6 Targeting
+
+	measure 'Curve Model Net' = SUM('Targeting Curve'[ModelIncRevenue]) - SUM('Targeting Curve'[Contacts]) * [Contact Cost Value]
+		formatString: $#,0
+		displayFolder: 6 Targeting
+
+	measure 'Curve Random Net' = SUM('Targeting Curve'[RandomIncRevenue]) - SUM('Targeting Curve'[Contacts]) * [Contact Cost Value]
+		formatString: $#,0
+		displayFolder: 6 Targeting
+
+	measure 'Predicted Visit Uplift' = AVERAGE('Decile Check'[PredictedVisitUplift])
+		formatString: 0.0%
+		displayFolder: 6 Targeting
+
+	measure 'Observed Visit Uplift' = AVERAGE('Decile Check'[ObservedVisitUplift])
+		formatString: 0.0%
+		displayFolder: 6 Targeting
+
+	measure 'Sim Caption' = "Target " & FORMAT([Target Share Value], "0") & "% at " & FORMAT([Contact Cost Value], "$0.00") & " per contact. Best share at this cost: " & FORMAT([Best Target Share], "0") & "%"
+		displayFolder: 6 Targeting
+
+	column Value
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: [Value]
+
+	partition KPI = calculated
+		mode: import
+		source =
+				{BLANK()}
+

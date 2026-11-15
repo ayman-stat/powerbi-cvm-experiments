@@ -1,0 +1,26 @@
+/// Disconnected selector: which treatment arm the readout compares with the control.
+table 'Test Arm'
+
+	column Arm
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Arm
+		sortByColumn: ArmOrder
+
+	column ArmOrder
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: ArmOrder
+
+	partition 'Test Arm' = m
+		mode: import
+		source =
+				let
+				    Source = fnLoadCsv("dim_test_arm.csv"),
+				    Typed = Table.TransformColumnTypes(Source, {{"Arm", type text}, {"ArmOrder", Int64.Type}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table

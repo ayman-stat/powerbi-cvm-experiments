@@ -1,0 +1,39 @@
+/// Field parameter: the segment dimension for the customised-offer analysis.
+table 'Uplift by'
+
+	column 'Uplift by Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+	column 'Uplift by Fields'
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Uplift by Order'
+
+		extendedProperty ParameterMetadata = {"version":3,"kind":2}
+
+	column 'Uplift by'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Uplift by Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Uplift by Fields'
+
+	partition 'Uplift by' = calculated
+		mode: import
+		source =
+				{
+				    ("Purchase history", NAMEOF('Email Test'[Purchased]), 0), 
+				    ("Recency", NAMEOF('Email Test'[RecencyBand]), 1), 
+				    ("Past-year spend", NAMEOF('Email Test'[HistoryBand]), 2), 
+				    ("Channel", NAMEOF('Email Test'[Channel]), 3), 
+				    ("Area type", NAMEOF('Email Test'[ZipCode]), 4), 
+				    ("Customer type", NAMEOF('Email Test'[CustomerType]), 5)
+				}

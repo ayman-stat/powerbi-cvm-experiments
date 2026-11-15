@@ -1,0 +1,14 @@
+Metric,Value
+retail_raw_lines,1044848
+retail_clean_lines,805830
+churn_auc_valid,0.783
+churn_auc_test,0.7609
+churn_auc_recency_only_test,0.708
+churn_base_rate_test,0.5046
+churn_top_decile_rate,0.7714
+churn_top_decile_lift,1.53
+churn_top30_capture,0.4354
+uplift_inc_at_30pct,14274.04
+uplift_inc_at_100pct,49734.34
+uplift_top_decile_visit_pp,13.1
+uplift_avg_visit_pp,6.1

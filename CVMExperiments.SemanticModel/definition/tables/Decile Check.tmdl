@@ -1,0 +1,47 @@
+/// Held-out check: predicted vs observed visit uplift by predicted decile.
+table 'Decile Check'
+
+	column UpliftDecile
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: UpliftDecile
+
+	column Customers
+		dataType: double
+		isHidden
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: Customers
+
+	column PredictedVisitUplift
+		dataType: double
+		isHidden
+		formatString: 0.0%
+		summarizeBy: none
+		sourceColumn: PredictedVisitUplift
+
+	column ObservedVisitUplift
+		dataType: double
+		isHidden
+		formatString: 0.0%
+		summarizeBy: none
+		sourceColumn: ObservedVisitUplift
+
+	column ObservedSpendUplift
+		dataType: double
+		isHidden
+		formatString: 0.00
+		summarizeBy: none
+		sourceColumn: ObservedSpendUplift
+
+	partition 'Decile Check' = m
+		mode: import
+		source =
+				let
+				    Source = fnLoadCsv("uplift_decile_check.csv"),
+				    Typed = Table.TransformColumnTypes(Source, {{"UpliftDecile", Int64.Type}, {"Customers", type number}, {"PredictedVisitUplift", type number}, {"ObservedVisitUplift", type number}, {"ObservedSpendUplift", type number}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table

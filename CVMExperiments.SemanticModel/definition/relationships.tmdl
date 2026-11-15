@@ -1,0 +1,20 @@
+relationship 2de87cdf-fb6b-5df7-80ec-cc23587869ca
+	fromColumn: 'Customer Month'.MonthStart
+	toColumn: Month.Date
+
+relationship 6a863bb1-70bb-51c7-8416-6954f1976bbc
+	fromColumn: 'Customer Month'.CustomerKey
+	toColumn: Customer.CustomerKey
+
+relationship 54f024a0-3b65-524d-bc4c-3eef44768757
+	fromColumn: 'Customer Month'.Flow
+	toColumn: Flow.Flow
+
+relationship ff621214-42f6-53dc-b479-a21003d75dd4
+	fromColumn: 'Cohort Activity'.CustomerKey
+	toColumn: Customer.CustomerKey
+
+relationship 62fa2513-1be9-5d8c-a021-42f58cfa50e8
+	fromColumn: 'Churn Scores'.CustomerKey
+	toColumn: Customer.CustomerKey
+

@@ -1,0 +1,14 @@
+/// Two-sided p-value of a two-proportion z-test (pooled variance).
+function TwoProportionP =
+		(p1 : NUMERIC, n1 : NUMERIC, p2 : NUMERIC, n2 : NUMERIC) =>
+		VAR _p = DIVIDE(p1 * n1 + p2 * n2, n1 + n2)
+		VAR _se = SQRT(_p * (1 - _p) * (1 / n1 + 1 / n2))
+		VAR _z = DIVIDE(p1 - p2, _se)
+		RETURN IF(_se > 0, 2 * (1 - NORM.S.DIST(ABS(_z), TRUE)))
+
+/// Two-sided p-value for a difference in means (Welch, normal approximation for large samples).
+function MeanDifferenceP =
+		(m1 : NUMERIC, v1 : NUMERIC, n1 : NUMERIC, m2 : NUMERIC, v2 : NUMERIC, n2 : NUMERIC) =>
+		VAR _se = SQRT(v1 / n1 + v2 / n2)
+		RETURN IF(_se > 0, 2 * (1 - NORM.S.DIST(ABS(DIVIDE(m1 - m2, _se)), TRUE)))
+

@@ -1,0 +1,52 @@
+/// Fact: one row per customer per purchase month (classic cohort retention).
+table 'Cohort Activity'
+
+	column CustomerKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: CustomerKey
+
+	column MonthStart
+		dataType: dateTime
+		isHidden
+		formatString: mmm yyyy
+		summarizeBy: none
+		sourceColumn: MonthStart
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column CohortMonth
+		dataType: dateTime
+		isHidden
+		formatString: mmm yyyy
+		summarizeBy: none
+		sourceColumn: CohortMonth
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	/// Months since first purchase
+	column MonthIndex
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: MonthIndex
+
+	column Revenue
+		dataType: double
+		isHidden
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: Revenue
+
+	partition 'Cohort Activity' = m
+		mode: import
+		source =
+				let
+				    Source = fnLoadCsv("fact_cohort_activity.csv"),
+				    Typed = Table.TransformColumnTypes(Source, {{"CustomerKey", Int64.Type}, {"MonthStart", type date}, {"CohortMonth", type date}, {"MonthIndex", Int64.Type}, {"Revenue", type number}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table

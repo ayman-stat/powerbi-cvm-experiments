@@ -1,0 +1,15 @@
+/// What-if: share of customers to target, ranked by predicted uplift.
+table 'Target Share'
+
+	/// Share of the base to e-mail (%)
+	column 'Target Share'
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: [Value]
+
+	partition 'Target Share' = calculated
+		mode: import
+		source =
+				GENERATESERIES(5, 100, 5)
+

@@ -1,0 +1,82 @@
+/// Offer policies evaluated on the randomised test by inverse propensity weighting; 95% bootstrap intervals.
+table Policies
+
+	column Policy
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Policy
+		sortByColumn: PolicyOrder
+
+	column PolicyOrder
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: PolicyOrder
+
+	column SpendPerCustomer
+		dataType: double
+		isHidden
+		formatString: 0.000
+		summarizeBy: none
+		sourceColumn: SpendPerCustomer
+
+	column IncrementalPerCustomer
+		dataType: double
+		isHidden
+		formatString: 0.000
+		summarizeBy: none
+		sourceColumn: IncrementalPerCustomer
+
+	column CILow
+		dataType: double
+		isHidden
+		formatString: 0.000
+		summarizeBy: none
+		sourceColumn: CILow
+
+	column CIHigh
+		dataType: double
+		isHidden
+		formatString: 0.000
+		summarizeBy: none
+		sourceColumn: CIHigh
+
+	column ContactsPer1000
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: ContactsPer1000
+
+	column IncPer1000
+		dataType: double
+		isHidden
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: IncPer1000
+
+	column CILowPer1000
+		dataType: double
+		isHidden
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: CILowPer1000
+
+	column CIHighPer1000
+		dataType: double
+		isHidden
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: CIHighPer1000
+
+	partition Policies = m
+		mode: import
+		source =
+				let
+				    Source = fnLoadCsv("uplift_policies.csv"),
+				    Typed = Table.TransformColumnTypes(Source, {{"Policy", type text}, {"PolicyOrder", Int64.Type}, {"SpendPerCustomer", type number}, {"IncrementalPerCustomer", type number}, {"CILow", type number}, {"CIHigh", type number}, {"ContactsPer1000", Int64.Type}, {"IncPer1000", type number}, {"CILowPer1000", type number}, {"CIHighPer1000", type number}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table

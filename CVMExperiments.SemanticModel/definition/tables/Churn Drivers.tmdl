@@ -1,0 +1,25 @@
+/// Permutation importance on the out-of-time test set (drop in AUC when the feature is shuffled).
+table 'Churn Drivers'
+
+	column Feature
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Feature
+
+	column AUCDrop
+		dataType: double
+		isHidden
+		formatString: 0.000
+		summarizeBy: none
+		sourceColumn: AUCDrop
+
+	partition 'Churn Drivers' = m
+		mode: import
+		source =
+				let
+				    Source = fnLoadCsv("churn_feature_importance.csv"),
+				    Typed = Table.TransformColumnTypes(Source, {{"Feature", type text}, {"AUCDrop", type number}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table

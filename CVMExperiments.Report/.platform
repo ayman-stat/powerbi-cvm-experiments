@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "CVMExperiments"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "b0303bd9-40b6-5ffc-b1bb-046f81b2a384"
+  }
+}

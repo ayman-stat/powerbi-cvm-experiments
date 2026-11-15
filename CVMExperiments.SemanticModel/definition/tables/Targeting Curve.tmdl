@@ -1,0 +1,55 @@
+/// Incremental revenue and visits when e-mailing the top-k% by predicted uplift vs a random k%.
+table 'Targeting Curve'
+
+	/// Share of customers e-mailed, ranked by predicted uplift
+	column TargetPct
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: TargetPct
+
+	column Contacts
+		dataType: int64
+		isHidden
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: Contacts
+
+	column ModelIncRevenue
+		dataType: double
+		isHidden
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: ModelIncRevenue
+
+	column RandomIncRevenue
+		dataType: double
+		isHidden
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: RandomIncRevenue
+
+	column ModelIncVisits
+		dataType: double
+		isHidden
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: ModelIncVisits
+
+	column RandomIncVisits
+		dataType: double
+		isHidden
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: RandomIncVisits
+
+	partition 'Targeting Curve' = m
+		mode: import
+		source =
+				let
+				    Source = fnLoadCsv("uplift_targeting_curve.csv"),
+				    Typed = Table.TransformColumnTypes(Source, {{"TargetPct", Int64.Type}, {"Contacts", Int64.Type}, {"ModelIncRevenue", type number}, {"RandomIncRevenue", type number}, {"ModelIncVisits", type number}, {"RandomIncVisits", type number}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table

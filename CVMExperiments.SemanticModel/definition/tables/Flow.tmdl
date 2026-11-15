@@ -1,0 +1,31 @@
+/// Lifecycle flow of a customer in a month.
+table Flow
+
+	column Flow
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Flow
+		sortByColumn: FlowOrder
+
+	column FlowOrder
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: FlowOrder
+
+	column Direction
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Direction
+
+	partition Flow = m
+		mode: import
+		source =
+				let
+				    Source = fnLoadCsv("dim_flow.csv"),
+				    Typed = Table.TransformColumnTypes(Source, {{"Flow", type text}, {"FlowOrder", Int64.Type}, {"Direction", type text}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table

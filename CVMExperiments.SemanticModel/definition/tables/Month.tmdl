@@ -1,0 +1,72 @@
+/// Monthly calendar, Mar 2010 - Nov 2011.
+table Month
+
+	/// First day of the month
+	column Date
+		dataType: dateTime
+		isKey
+		formatString: mmm yyyy
+		summarizeBy: none
+		sourceColumn: [Date]
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Year
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: [Year]
+
+	column Month
+		dataType: string
+		summarizeBy: none
+		sourceColumn: [Month]
+		sortByColumn: 'Month Number'
+
+	column 'Month Number'
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: [Month Number]
+
+	column 'Year Month'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: [Year Month]
+		sortByColumn: 'Year Month Sort'
+
+	column 'Year Month Sort'
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: [Year Month Sort]
+
+	/// Reporting year: Dec-Nov. Mar-Nov 2010 is partial (the first three months warm up the 3-month activity window).
+	column Period
+		dataType: string
+		summarizeBy: none
+		sourceColumn: [Period]
+		sortByColumn: 'Period Sort'
+
+	column 'Period Sort'
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: [Period Sort]
+
+	partition Month = calculated
+		mode: import
+		source =
+				VAR _m = FILTER(CALENDAR(DATE(2010, 3, 1), DATE(2011, 11, 30)), DAY([Date]) = 1)
+				RETURN ADDCOLUMNS(_m,
+				    "Year", YEAR([Date]),
+				    "Month", FORMAT([Date], "MMM"),
+				    "Month Number", MONTH([Date]),
+				    "Year Month", FORMAT([Date], "MMM yy"),
+				    "Year Month Sort", YEAR([Date]) * 100 + MONTH([Date]),
+				    "Period", IF([Date] >= DATE(2010, 12, 1), "Dec 10 - Nov 11", "Mar 10 - Nov 10"),
+				    "Period Sort", IF([Date] >= DATE(2010, 12, 1), 2, 1))
+

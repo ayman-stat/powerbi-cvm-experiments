@@ -1,0 +1,15 @@
+/// What-if: fully loaded cost of one contact (offer, fatigue, channel).
+table 'Contact Cost'
+
+	/// Cost per contact (USD): offer plus channel
+	column 'Contact Cost'
+		dataType: double
+		formatString: $0.00
+		summarizeBy: none
+		sourceColumn: [Contact Cost]
+
+	partition 'Contact Cost' = calculated
+		mode: import
+		source =
+				DATATABLE("Contact Cost", DOUBLE, {{0}, {0.1}, {0.25}, {0.5}, {0.75}, {1}})
+

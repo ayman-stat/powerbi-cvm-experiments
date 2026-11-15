@@ -1,0 +1,130 @@
+/// Fact: MineThatData e-mail test, 64,000 customers randomised 1/3 each; two-week visit, conversion and spend.
+table 'Email Test'
+
+	column CustomerKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: CustomerKey
+
+	/// Mens offer, Womens offer or Control (no e-mail), randomised
+	column Arm
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Arm
+
+	column RecencyMonths
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: RecencyMonths
+
+	/// Months since last purchase
+	column RecencyBand
+		dataType: string
+		summarizeBy: none
+		sourceColumn: RecencyBand
+
+	/// Spend in the past year
+	column HistoryBand
+		dataType: string
+		summarizeBy: none
+		sourceColumn: HistoryBand
+
+	column History12m
+		dataType: double
+		isHidden
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: History12m
+
+	/// Merchandise bought in the past year
+	column Purchased
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Purchased
+
+	/// Area type
+	column ZipCode
+		dataType: string
+		summarizeBy: none
+		sourceColumn: ZipCode
+
+	column CustomerType
+		dataType: string
+		summarizeBy: none
+		sourceColumn: CustomerType
+
+	/// Purchase channel in the past year
+	column Channel
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Channel
+
+	column Visited
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: Visited
+
+	column Converted
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: Converted
+
+	column Spend
+		dataType: double
+		isHidden
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: Spend
+
+	column UpliftMens
+		dataType: double
+		isHidden
+		formatString: 0.0%
+		summarizeBy: none
+		sourceColumn: UpliftMens
+
+	column UpliftWomens
+		dataType: double
+		isHidden
+		formatString: 0.0%
+		summarizeBy: none
+		sourceColumn: UpliftWomens
+
+	column BestUplift
+		dataType: double
+		isHidden
+		formatString: 0.0%
+		summarizeBy: none
+		sourceColumn: BestUplift
+
+	/// Offer with the higher predicted visit uplift
+	column ModelOffer
+		dataType: string
+		summarizeBy: none
+		sourceColumn: ModelOffer
+
+	/// 1 = most persuadable (model)
+	column UpliftDecile
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: UpliftDecile
+
+	partition 'Email Test' = m
+		mode: import
+		source =
+				let
+				    Source = fnLoadCsv("fact_email_test.csv"),
+				    Typed = Table.TransformColumnTypes(Source, {{"CustomerKey", Int64.Type}, {"Arm", type text}, {"RecencyMonths", Int64.Type}, {"RecencyBand", type text}, {"HistoryBand", type text}, {"History12m", type number}, {"Purchased", type text}, {"ZipCode", type text}, {"CustomerType", type text}, {"Channel", type text}, {"Visited", Int64.Type}, {"Converted", Int64.Type}, {"Spend", type number}, {"UpliftMens", type number}, {"UpliftWomens", type number}, {"BestUplift", type number}, {"ModelOffer", type text}, {"UpliftDecile", Int64.Type}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
