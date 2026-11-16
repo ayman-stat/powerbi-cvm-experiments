@@ -1,5 +1,7 @@
 # CVM Command Centre: retention, churn and offer experiments
 
+[![ci](https://github.com/ayman-stat/powerbi-cvm-experiments/actions/workflows/ci.yml/badge.svg)](https://github.com/ayman-stat/powerbi-cvm-experiments/actions/workflows/ci.yml)
+
 Customer value management end to end: base dynamics, cohorts, an out-of-time churn model, an A/B test readout, customised offers and an uplift-targeting simulator.
 
 **Domain:** CVM / retention / experimentation  ·  **Built with:** Power BI Desktop (PBIP, PBIR, TMDL), DAX, Python  ·  **Author:** [Mohamed Ayman](https://mohamedaymanstat.vercel.app)
