@@ -38,6 +38,14 @@ Customer value management end to end: base dynamics, cohorts, an out-of-time chu
 - Uplift: cross-fitted logistic T-learner on visit uplift (spend is too sparse to rank individuals; tested and documented).
 - Policies valued by self-normalised inverse-propensity weighting with bootstrap intervals: unbiased because arms were randomised.
 
+## Data science
+
+Three notebooks reproduce every model number in this report, then test it ([ds/README](ds/README.md), [model card](ds/model_card.md)):
+
+- [01 EDA](ds/notebooks/01_eda_lifecycle_and_experiment.ipynb): cleaning with row counts, the seasonal churn base rate (42%-67%), label-window sensitivity and randomisation checks.
+- [02 Churn model](ds/notebooks/02_churn_model.ipynb): out-of-time champion vs challenger. A regularised logistic (AUC 0.770) and a tuned LightGBM (0.773) beat the production model (0.761); a seasonal calibration fix; a retention budget ranked by margin at risk.
+- [03 Uplift and policy](ds/notebooks/03_uplift_and_policy.ipynb): alternative uplift learners, uplift calibration, policy values with paired intervals, and the power analysis for the next test.
+
 ## Design
 
 - Identity: **Command centre**: dark mode, violet for treatment, slate for control, mint for gains, pill-tab navigation, KPI tiles.
